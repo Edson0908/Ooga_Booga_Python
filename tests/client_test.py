@@ -52,8 +52,8 @@ async def test_get_token_prices(client):
     prices = await client.get_token_prices()
     assert isinstance(prices, list)
     assert len(prices) > 0
-    assert "address" in prices[0].dict()
-    assert "price" in prices[0].dict()
+    assert "address" in prices[0].model_dump()
+    assert "price" in prices[0].model_dump()
 
 
 @pytest.mark.asyncio

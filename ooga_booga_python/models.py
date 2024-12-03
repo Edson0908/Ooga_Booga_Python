@@ -1,5 +1,5 @@
-from pydantic import BaseModel, Field, HttpUrl
 from typing import List, Union, Optional, Literal
+from pydantic import BaseModel, HttpUrl
 
 
 class SwapParams(BaseModel):
@@ -40,14 +40,6 @@ class ApproveTransaction(BaseModel):
     to: str
     data: str
 
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "to": "0x7EeCA4205fF31f947EdBd49195a7A88E6A91161B",
-                "data": "0x095ea7b300000000000000000000000089fe079d1daea2db9cde973e5adaa8e2228938ea0000000000000000000000000000000000000000000000000000000000000001"
-            }
-        }
-
 
 class ApproveResponse(BaseModel):
     """
@@ -58,16 +50,6 @@ class ApproveResponse(BaseModel):
     """
     tx: ApproveTransaction
 
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "tx": {
-                    "to": "0x7EeCA4205fF31f947EdBd49195a7A88E6A91161B",
-                    "data": "0x095ea7b300000000000000000000000089fe079d1daea2db9cde973e5adaa8e2228938ea0000000000000000000000000000000000000000000000000000000000000001"
-                }
-            }
-        }
-
 
 class AllowanceResponse(BaseModel):
     """
@@ -77,13 +59,6 @@ class AllowanceResponse(BaseModel):
         allowance (str): The allowance for the router, represented as a string.
     """
     allowance: str
-
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "allowance": "1000000000000000"
-            }
-        }
 
 
 class SwapToken(BaseModel):
@@ -142,7 +117,6 @@ class SwapTx(BaseModel):
     to: str
     data: str
     value: str
-
 
 
 class SwapTokenInfo(BaseModel):
