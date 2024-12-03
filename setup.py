@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 from pathlib import Path
 
-VERSION = '0.0.1'
+VERSION = '0.0.2'
 DESCRIPTION = "A Python wrapper for the Ooga Booga API, providing seamless integration with Berachain liquidity for DApps and protocols."
 long_description = (Path(__file__).parent / "README.md").read_text()
 

@@ -1,9 +1,11 @@
 # Ooga Booga Python Client
 
-[![PyPI](https://img.shields.io/pypi/v/Ooga-Booga-Python)](https://pypi.org/project/Ooga-Booga-Python/)  [![Downloads](https://static.pepy.tech/badge/Ooga-Booga-Python)](https://pepy.tech/project/Ooga-Booga-Python) 
+[![PyPI](https://img.shields.io/pypi/v/Ooga-Booga-Python)](https://pypi.org/project/Ooga-Booga-Python/) 
+[![Downloads](https://static.pepy.tech/badge/Ooga-Booga-Python)](https://pepy.tech/project/Ooga-Booga-Python) 
 [![Tests](https://github.com/1220moritz/Ooga_Booga_Python/actions/workflows/tests.yml/badge.svg)](https://github.com/1220moritz/Ooga_Booga_Python/actions/workflows/tests.yml)  
+
 [GitHub Repository](https://github.com/1220moritz/Ooga_Booga_Python)  
-[PyPI Package](https://pypi.org/project/Ooga-Booga-Python/0.0.1/)
+[PyPI Package](https://pypi.org/project/Ooga-Booga-Python/)
 
 The **Ooga Booga Python Client** is a wrapper for the [Ooga Booga API V1](https://docs.oogabooga.io/api/), a powerful DEX aggregation and smart order routing REST API built to integrate Berachain's liquidity into your DApp or protocol. This client allows you to interact with Berachain's liquidity sources, including AMMs, bonding curves, and order books, to execute the best trades with minimal price impact.
 
@@ -93,11 +95,16 @@ Here’s how to use the **Ooga Booga Python Client** in your project:
 ```python
 from ooga_booga_python.client import OogaBoogaClient
 import asyncio
+from dotenv import load_dotenv
+import os
+
+# Load environment variables from the .env file
+load_dotenv()
 
 async def main():
     client = OogaBoogaClient(
-        api_key="your-api-key",
-        private_key="your-private-key"
+        api_key=os.getenv("OOGA_BOOGA_API_KEY"),
+        private_key=os.getenv("PRIVATE_KEY")
     )
     # Example: Fetch token list
     tokens = await client.get_token_list()
@@ -105,6 +112,7 @@ async def main():
         print(f"Name: {token.name}, Symbol: {token.symbol}")
 
 asyncio.run(main())
+
 ```
 
 ### Perform a Token Swap
