@@ -30,4 +30,7 @@ jobs:
         pip install pytest
 
     - name: Run tests
+      env:
+        OOGA_BOOGA_API_KEY: ${{ secrets.OOGA_BOOGA_API_KEY }}
+        PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
       run: pytest tests/
