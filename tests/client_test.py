@@ -10,6 +10,10 @@ load_dotenv()
 API_KEY = os.getenv("OOGA_BOOGA_API_KEY")
 PRIVATE_KEY = os.getenv("PRIVATE_KEY")
 
+TOKEN_IN = "0xFCBD14DC51f0A4d49d5E53C2E0950e0bC26d0Dce" #HONEY MAINNET
+TOKEN_OUT = "0x6969696969696969696969696969696969696969" # wBEAR MAINNET
+EXECUTOR = "0xa154CCD02848068ceC1c16B3126EBb2BE73553Ed"
+
 # Fixtures
 @pytest.fixture
 def client():
@@ -27,6 +31,7 @@ async def test_get_token_list(client):
     Test fetching the list of tokens.
     """
     tokens = await client.get_token_list()
+    print(tokens)
     assert isinstance(tokens, list)
     assert len(tokens) > 0
     assert "address" in tokens[0].model_dump()
@@ -37,8 +42,8 @@ async def test_get_token_allowance(client):
     """
     Test fetching token allowance for a specific address and token.
     """
-    from_address = "0x31EF7AF5a3497d88bB04943E461B8497AAac6bE3"
-    token_address = "0xDFDaeCa74bB2D37204171Ce05fE6bA6AE970D844" # Fake Bera
+    from_address = TOKEN_IN
+    token_address = TOKEN_OUT
     allowance = await client.get_token_allowance(from_address=from_address, token=token_address)
     assert isinstance(allowance.allowance, str), "Allowance is not a string"
     assert allowance.allowance == '0', f"Expected allowance to be '0', got {allowance.allowance}"
@@ -73,10 +78,10 @@ async def test_get_swap_infos(client):
     Test preparing swap information and routing the swap.
     """
     swap_params = SwapParams(
-        tokenIn="0x0000000000000000000000000000000000000000",
+        tokenIn=TOKEN_IN,
         amount=1000000000000000000,
-        tokenOut="0x0E4aaF1351de4c0264C5c7056Ef3777b41BD8e03",
-        to="0x31EF7AF5a3497d88bB04943E461B8497AAac6bE3",
+        tokenOut=TOKEN_OUT,
+        to=EXECUTOR,
         slippage=0.02,
     )
     swap_info = await client.get_swap_infos(swap_params=swap_params)

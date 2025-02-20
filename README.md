@@ -13,11 +13,11 @@ For more details on the API and its capabilities, refer to the official [Ooga Bo
 
 ## Features
 
-- 💸 **Find the Best Rates**: Get optimal real-time prices for your trades by leveraging Ooga Booga's liquidity aggregation.
-- 🚀 **Simplified Integration**: A single API integration grants access to all liquidity sources on Berachain, saving you development time.
-- 📈 **Optimal Trade Execution**: Perform efficient trades with minimized price impact and maximum returns for your users.
-- 🦺 **Enhanced Security**: Execute trades securely via Ooga Booga’s smart contract, which wraps each transaction.
-- Asynchronous API calls using `aiohttp` for smooth, non-blocking operations.
+- **Find the Best Rates**: Get optimal real-time prices for your trades by leveraging Ooga Booga's liquidity aggregation.
+- **Simplified Integration**: A single API integration grants access to all liquidity sources on Berachain, saving you development time.
+- **Optimal Trade Execution**: Perform efficient trades with minimized price impact and maximum returns for your users.
+- **Enhanced Security**: Execute trades securely via Ooga Booga’s smart contract, which wraps each transaction.
+- **Asynchronous API** calls using `aiohttp` for smooth, non-blocking operations.
 
 ## Features
 

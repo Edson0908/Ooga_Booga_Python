@@ -1,5 +1,5 @@
 from typing import List, Union, Optional, Literal
-from pydantic import BaseModel, HttpUrl
+from pydantic import BaseModel, RootModel
 
 
 class SwapParams(BaseModel):
@@ -26,7 +26,7 @@ class Token(BaseModel):
     name: str
     symbol: str
     decimals: int
-    tokenURI: HttpUrl
+    tokenURI: str
 
 
 class ApproveTransaction(BaseModel):
@@ -223,32 +223,22 @@ class PriceInfo(BaseModel):
     price: float
 
 
-class LiquiditySourcesResponse(BaseModel):
-    """
-    Represents the response for the /v1/liquidity-sources endpoint.
-
-    Attributes:
-        sources (List[Literal]): List of allowed liquidity sources.
-    """
-    sources: List[
-        Literal[
-            "KodiakV2",
-            "KodiakV3",
-            "Honeypot",
-            "NativeWrap",
-            "HoneySwap",
-            "Grizzly",
-            "Bulla",
-            "Izumi",
-            "Beradrome",
-            "Bex",
-            "Berps",
-            "Bend",
-            "Marginal",
-            "Memeswap",
-            "Twin",
-            "BurrBear Multi Stable",
-            "BurrBear Generalized",
-            "WeBera",
-        ]
+class LiquiditySourcesResponse(RootModel[List[
+    Literal[
+        "KodiakV2",
+        "KodiakV3",
+        "Memeswap",
+        "HoldStation",
+        "Bulla",
+        "BeraswapComposableStable",
+        "BeraswapWeighted",
+        "HoneySwap",
+        "BurrBearMultiStable",
+        "Beradrome",
+        "Webera",
+        "KodiakPanda"
     ]
+]]):
+    """
+    A Pydantic v2 RootModel that validates a JSON array of liquidity sources.
+    """

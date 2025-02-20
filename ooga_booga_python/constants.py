@@ -1,2 +1,2 @@
-BASE_URL = "https://bartio.api.oogabooga.io/v1"
-CHAIN_ID = 80084
+BASE_URL = "https://mainnet.api.oogabooga.io/v1"
+CHAIN_ID = 80094

@@ -28,12 +28,24 @@ class OogaBoogaClient:
     """
     A client for interacting with the Ooga Booga API.
 
-    Attributes:
+    Args:
         api_key (str): API key for authentication.
         max_retries (int): Maximum number of retries for requests.
         request_delay (int): Delay in seconds between retries.
+
+    Attributes:
+        api_key (str): API key for authentication.
+        private_key (str): Private key for signing transactions.
+        rpc_url (str): RPC URL for blockchain interactions.
+        max_retries (int): Maximum number of retries for requests.
+        request_delay (int): Delay in seconds between retries.
+        base_url (str): Base URL for the API.
+        headers (dict): Headers used for API requests.
+        w3 (Web3): Web3 instance for blockchain interaction.
+        account (LocalAccount): Ethereum account derived from the private key.
+        address (str): Address of the Ethereum account.
     """
-    def __init__(self, api_key: str, private_key: str, rpc_url: str = "https://bartio.rpc.berachain.com/", max_retries: int = 5, request_delay: int = 5):
+    def __init__(self, api_key: str, private_key: str, rpc_url: str = "https://rpc.berachain.com/", max_retries: int = 5, request_delay: int = 5):
         if not api_key:
             raise ValueError("API key is required.")
         if not rpc_url:
@@ -56,6 +68,19 @@ class OogaBoogaClient:
 
 
     async def _send_request(self, url: str, params: dict = None) -> dict:
+        """
+        Sends a GET request to the API and handles retries.
+
+        Args:
+            url (str): The endpoint URL.
+            params (dict, optional): Query parameters for the request.
+
+            Returns:
+                dict: JSON response data.
+
+            Raises:
+                APIRequestError: If the request fails after retries.
+        """
         retry = 0
         async with aiohttp.ClientSession() as session:
             while retry < self.max_retries:
@@ -97,6 +122,55 @@ class OogaBoogaClient:
         return retry
 
 
+    async def _prepare_and_send_transaction(self, tx_params: TxParams) -> dict:
+        """
+        Prepares, signs, and sends a transaction, then waits for the receipt.
+
+        Args:
+            tx_params (TxParams): The transaction parameters.
+
+        Returns:
+            dict: The transaction receipt.
+
+        Raises:
+            ValueError: If signing or sending fails
+        """
+        logger.info("Signing and sending transaction...")
+        signed_tx = self.account.sign_transaction(tx_params)
+        tx_hash = self.w3.eth.send_raw_transaction(signed_tx.raw_transaction)
+        rcpt = self.w3.eth.wait_for_transaction_receipt(tx_hash)
+        logger.info(
+            f"Transaction complete: Transaction Hash: 0x{rcpt['transactionHash'].hex()}, Status: {rcpt['status']}")
+        return rcpt
+
+
+    async def _build_transaction(self, to: str, data: str, value: int = 0, custom_nonce=None) -> TxParams:
+        """
+        Builds a transaction dictionary with common parameters.
+
+        Args:
+            to (str): The recipient address.
+            data (str): The transaction data.
+            value (int, optional): The transaction value. Defaults to 0.
+
+        Returns:
+            TxParams: The transaction parameters.
+        """
+        nonce = custom_nonce or self.w3.eth.get_transaction_count(self.address)
+        return {
+            "from": self.address,
+            "to": to,
+            "data": HexStr(data),
+            "gas": self.w3.eth.estimate_gas(
+                {"from": self.address, "to": to, "data": HexStr(data)}
+            ),
+            "value": Web3.to_wei(value, "wei"),
+            "gasPrice": self.w3.eth.gas_price,
+            "nonce": nonce,
+            "chainId": CHAIN_ID,
+        }
+
+
     async def get_token_list(self) -> List[Token]:
         """
         Fetches a list of all available tokens.
@@ -109,52 +183,14 @@ class OogaBoogaClient:
         return [Token(**token) for token in response_data]
 
 
-    async def _prepare_and_send_transaction(self, tx_params: TxParams) -> dict:
+    async def swap(self, swap_params: SwapParams, custom_nonce=None) -> None:
         """
-        Prepares, signs, and sends a transaction, then waits for the receipt.
+        Executes a token swap based on provided parameters.
 
         Args:
-            tx_params (TxParams): The transaction parameters.
-
-        Returns:
-            dict: The transaction receipt.
+            swap_params (SwapParams): The swap parameters.
+            custom_nonce (int, optional): Custom nonce for transaction ordering.
         """
-        logger.info("Signing and sending transaction...")
-        signed_tx = self.account.sign_transaction(tx_params)
-        tx_hash = self.w3.eth.send_raw_transaction(signed_tx.raw_transaction)
-        rcpt = self.w3.eth.wait_for_transaction_receipt(tx_hash)
-        logger.info(
-            f"Transaction complete: Transaction Hash: 0x{rcpt['transactionHash'].hex()}, Status: {rcpt['status']}")
-        return rcpt
-
-
-    async def _build_transaction(self, to: str, data: str, value: int = 0) -> TxParams:
-        """
-        Builds a transaction dictionary with common parameters.
-
-        Args:
-            to (str): The recipient address.
-            data (str): The transaction data.
-            value (int, optional): The transaction value. Defaults to 0.
-
-        Returns:
-            TxParams: The transaction parameters.
-        """
-        return {
-            "from": self.address,
-            "to": to,
-            "data": HexStr(data),
-            "gas": self.w3.eth.estimate_gas(
-                {"from": self.address, "to": to, "data": HexStr(data)}
-            ),
-            "value": Web3.to_wei(value, "wei"),
-            "gasPrice": self.w3.eth.gas_price,
-            "nonce": self.w3.eth.get_transaction_count(self.address),
-            "chainId": CHAIN_ID,
-        }
-
-
-    async def swap(self, swap_params: SwapParams):
         url = f"{self.base_url}/swap"
         params = swap_params.model_dump(exclude_none=True)
         print(params)
@@ -164,20 +200,28 @@ class OogaBoogaClient:
 
         value = 0 if swap_params.tokenIn != ADDRESS_ZERO else swap_tx.value
         tx_params = await self._build_transaction(
-            to=swap_tx.to, data=swap_tx.data, value=value
+            to=swap_tx.to, data=swap_tx.data, value=value, custom_nonce=custom_nonce
         )
 
         logger.info("Submitting swap...")
         await self._prepare_and_send_transaction(tx_params)
 
 
-    async def approve_allowance(self, token: str, amount: str = MAX_INT) -> None:
+    async def approve_allowance(self, token: str, amount: str = MAX_INT, custom_nonce=None) -> None:
+        """
+        Approves an allowance for a given token.
+
+        Args:
+            token (str): The token address.
+            amount (str, optional): The amount to approve. Defaults to MAX_INT.
+            custom_nonce (int, optional): Custom nonce for transaction ordering.
+        """
         url = f"{self.base_url}/approve"
         params = {"token": token, "amount": amount}
         response_data = await self._send_request(url, params)
         approve_tx = ApproveResponse(**response_data).tx
 
-        tx_params = await self._build_transaction(to=approve_tx.to, data=approve_tx.data)
+        tx_params = await self._build_transaction(to=approve_tx.to, data=approve_tx.data, custom_nonce=custom_nonce)
 
         logger.info(f"Approving token {token} with amount {amount}...")
         await self._prepare_and_send_transaction(tx_params)
@@ -225,7 +269,8 @@ class OogaBoogaClient:
         """
         url = f"{self.base_url}/liquidity-sources"
         response_data = await self._send_request(url)
-        return LiquiditySourcesResponse(sources=response_data).sources
+        parsed = LiquiditySourcesResponse.model_validate(response_data)
+        return parsed.root
 
 
     async def get_swap_infos(self, swap_params: SwapParams) -> SwapResponse:
