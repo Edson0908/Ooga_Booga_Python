@@ -1,16 +1,15 @@
 from typing import List
 import aiohttp
 import asyncio
-
 from eth_typing import HexStr
 from web3 import Web3
 from web3.constants import MAX_INT, ADDRESS_ZERO
 from web3.types import TxParams
 
-from .custom_logger import get_logger
-from .constants import BASE_URL, CHAIN_ID
-from .exceptions import APIRequestError, APINotFoundError, APIRateLimitError, APIServerError
-from .models import (
+from custom_logger import get_logger
+from constants import BASE_URL, CHAIN_ID
+from exceptions import APIRequestError, APINotFoundError, APIRateLimitError, APIServerError
+from models import (
     SwapParams,
     Token,
     ApproveResponse,
@@ -82,7 +81,8 @@ class OogaBoogaClient:
                 APIRequestError: If the request fails after retries.
         """
         retry = 0
-        async with aiohttp.ClientSession() as session:
+        #async with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl=False)) as session:
             while retry < self.max_retries:
                 try:
                     async with session.get(url, headers=self.headers, params=params) as response:
@@ -220,7 +220,6 @@ class OogaBoogaClient:
         params = {"token": token, "amount": amount}
         response_data = await self._send_request(url, params)
         approve_tx = ApproveResponse(**response_data).tx
-
         tx_params = await self._build_transaction(to=approve_tx.to, data=approve_tx.data, custom_nonce=custom_nonce)
 
         logger.info(f"Approving token {token} with amount {amount}...")

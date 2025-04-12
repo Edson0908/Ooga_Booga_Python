@@ -8,7 +8,7 @@ class SwapParams(BaseModel):
     tokenOut: str
     to: str
     slippage: float = 0.02
-    liquidity_sources: list[str] | None = None
+    liquidity_sources: Optional[List[str]] = None
 
 
 class Token(BaseModel):

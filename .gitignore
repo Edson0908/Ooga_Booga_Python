@@ -135,3 +135,7 @@ dmypy.json
 /.idea/modules.xml
 /.idea/ooga_booga_python.iml
 /.idea/inspectionProfiles/profiles_settings.xml
+
+wallet/
+data/
+ooga_booga_python/test*
