@@ -139,3 +139,4 @@ dmypy.json
 wallet/
 data/
 ooga_booga_python/test*
+swap_history/

@@ -18,6 +18,8 @@ from models import (
     PriceInfo,
     LiquiditySourcesResponse, SuccessfulSwapResponse,
 )
+import certifi
+import ssl
 
 # Logging setup
 logger = get_logger(__name__)
@@ -81,10 +83,14 @@ class OogaBoogaClient:
                 APIRequestError: If the request fails after retries.
         """
         retry = 0
-        #async with aiohttp.ClientSession() as session:
-        async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl=False)) as session:
-            while retry < self.max_retries:
-                try:
+        
+        while retry < self.max_retries:
+            try:
+                # 使用 certifi 的证书
+                ssl_context = ssl.create_default_context(cafile=certifi.where())
+                connector = aiohttp.TCPConnector(ssl=ssl_context)
+                
+                async with aiohttp.ClientSession(connector=connector) as session:
                     async with session.get(url, headers=self.headers, params=params) as response:
                         if response.status == 200:
                             return await response.json()
@@ -96,10 +102,10 @@ class OogaBoogaClient:
                             raise APIServerError(f"Server error: {response.status} at {url}.")
                         else:
                             retry = await self._handle_errors(response, retry)
-                except aiohttp.ClientError as e:
-                    logger.error(f"Client error occurred: {e}")
-                    retry += 1
-                    await asyncio.sleep(self.request_delay)
+            except aiohttp.ClientError as e:
+                logger.error(f"Client error occurred: {e}")
+                retry += 1
+                await asyncio.sleep(self.request_delay)
         raise APIRequestError(f"Failed to fetch data from {url} after {self.max_retries} retries.")
 
 
@@ -183,7 +189,7 @@ class OogaBoogaClient:
         return [Token(**token) for token in response_data]
 
 
-    async def swap(self, swap_params: SwapParams, custom_nonce=None) -> None:
+    async def swap(self, swap_params: SwapParams, custom_nonce=None) -> dict:
         """
         Executes a token swap based on provided parameters.
 
@@ -193,9 +199,7 @@ class OogaBoogaClient:
         """
         url = f"{self.base_url}/swap"
         params = swap_params.model_dump(exclude_none=True)
-        print(params)
         response_data = await self._send_request(url, params)
-        print(response_data)
         swap_tx = SuccessfulSwapResponse(**response_data).tx
 
         value = 0 if swap_params.tokenIn != ADDRESS_ZERO else swap_tx.value
@@ -204,8 +208,8 @@ class OogaBoogaClient:
         )
 
         logger.info("Submitting swap...")
-        await self._prepare_and_send_transaction(tx_params)
-
+        rtcp = await self._prepare_and_send_transaction(tx_params)
+        return rtcp
 
     async def approve_allowance(self, token: str, amount: str = MAX_INT, custom_nonce=None) -> None:
         """

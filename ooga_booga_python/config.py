@@ -9,3 +9,4 @@ excluded_tokens = [
 
 max_retries = 5
 request_delay = 5
+slippage = 0.02
