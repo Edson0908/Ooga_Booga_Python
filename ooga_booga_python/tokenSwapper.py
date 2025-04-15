@@ -60,7 +60,7 @@ class TokenSwapper:
         params = {
             "id": wallet_address,
             "chain_id": "bera",
-            "is_all": "true"
+            "is_all": "false"
         }
         
         async with aiohttp.ClientSession(connector=self.connector) as session:
